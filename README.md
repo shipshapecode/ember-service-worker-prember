@@ -1,6 +1,8 @@
 ember-service-worker-prember
 ==============================================================================
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/shipshapecode/ember-service-worker-prember.svg)](https://greenkeeper.io/)
+
 [Short description of the addon.]
 
 Installation
