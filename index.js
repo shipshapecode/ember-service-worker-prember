@@ -17,7 +17,16 @@ module.exports = {
     const premberOptions = this.app.options['prember'];
     let premberUrls = [];
     if (premberOptions && premberOptions.urls && Array.isArray(premberOptions.urls)) {
-      premberUrls = premberOptions.urls;
+      premberOptions.urls.forEach((url) => {
+        let urlForPremberRoute = url;
+        if (url === '/') {
+          urlForPremberRoute = 'index.html';
+        }
+        else if (url.charAt(0) === '/') {
+          urlForPremberRoute = `${url.substr(1)}/index.html`;
+        }
+        premberUrls.push(urlForPremberRoute);
+      });
     }
     // We default to the urls you pass to prember, but you can override
     const eswPremberOptions = Object.assign({ urls: premberUrls }, this.app.options['esw-prember']);
