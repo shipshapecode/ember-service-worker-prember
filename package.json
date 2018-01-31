@@ -1,6 +1,6 @@
 {
   "name": "ember-service-worker-prember",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An Ember Service Worker plugin that caches the index.html files for each prember route",
   "keywords": [
     "ember-addon",
