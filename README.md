@@ -16,6 +16,7 @@ menu in the Chrome devtools.
 ## Installation
 
 ```
+ember install ember-service-worker
 ember install ember-service-worker-prember
 ```
 
