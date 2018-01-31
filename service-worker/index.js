@@ -15,16 +15,24 @@ self.addEventListener('fetch', (event) => {
   let isHTMLRequest = request.headers.get('accept').indexOf('text/html') !== -1;
   let isLocal = new URL(request.url).origin === location.origin;
 
-  if (isGETRequest && isHTMLRequest && isLocal && request.url.endsWith('/')) {
+  let url = request.url;
+  // Add trailing slash for consistency
+  if(!url.endsWith('/')) {
+    url += '/';
+  }
+  // Check if the path we are visiting is in the prember routes
+  const isPremberURL = PREMBER_URLS.indexOf(new URL(url).pathname) !== -1;
+
+  if (isGETRequest && isHTMLRequest && isLocal && isPremberURL) {
     event.respondWith(
-      caches.match(request, { cacheName: CACHE_NAME }).then((cached) => {
+      caches.match(url, { cacheName: CACHE_NAME }).then((cached) => {
         return cached || fetch(event.request)
         .then((response) => {
           const cacheCopy = response.clone();
 
           caches.open(CACHE_NAME)
             .then(function add(cache) {
-              cache.put(event.request, cacheCopy);
+              cache.put(url, cacheCopy);
             });
 
           return response;

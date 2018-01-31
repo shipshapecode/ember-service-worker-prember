@@ -17,14 +17,14 @@ module.exports = {
     const premberOptions = this.app.options['prember'];
     let premberUrls = [];
     if (premberOptions && premberOptions.urls && Array.isArray(premberOptions.urls)) {
+      // For consistency, make sure all routes end in "/"
       premberOptions.urls.forEach((url) => {
         let urlForPremberRoute = url;
-        if (url === '/') {
-          urlForPremberRoute = 'index.html';
+
+        if(!urlForPremberRoute.endsWith('/')) {
+          urlForPremberRoute += '/';
         }
-        else if (url.charAt(0) === '/') {
-          urlForPremberRoute = `${url.substr(1)}/index.html`;
-        }
+
         premberUrls.push(urlForPremberRoute);
       });
     }
