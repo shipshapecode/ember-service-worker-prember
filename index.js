@@ -15,19 +15,7 @@ module.exports = {
 
   treeForServiceWorker(swTree, appTree) {
     const premberOptions = this.app.options['prember'];
-    let premberUrls = [];
-    if (premberOptions && premberOptions.urls && Array.isArray(premberOptions.urls)) {
-      // For consistency, make sure all routes end in "/"
-      premberOptions.urls.forEach((url) => {
-        let urlForPremberRoute = url;
-
-        if(!urlForPremberRoute.endsWith('/')) {
-          urlForPremberRoute += '/';
-        }
-
-        premberUrls.push(urlForPremberRoute);
-      });
-    }
+    const premberUrls = premberOptions && premberOptions.urls ? premberOptions.urls : [];
     // We default to the urls you pass to prember, but you can override
     const eswPremberOptions = Object.assign({ urls: premberUrls }, this.app.options['esw-prember']);
     const configFile = new Config([appTree], eswPremberOptions);

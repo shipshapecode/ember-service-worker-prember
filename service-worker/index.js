@@ -11,32 +11,34 @@ const CACHE_NAME = `${CACHE_KEY_PREFIX}-${VERSION}`;
 
 self.addEventListener('fetch', (event) => {
   let request = event.request;
+  let url = request.url;
   let isGETRequest = request.method === 'GET';
   let isHTMLRequest = request.headers.get('accept').indexOf('text/html') !== -1;
-  let isLocal = new URL(request.url).origin === location.origin;
+  let isLocal = new URL(url).origin === location.origin;
 
-  let url = request.url;
-  // Add trailing slash for consistency
-  if(!url.endsWith('/')) {
-    url += '/';
-  }
-  // Check if the path we are visiting is in the prember routes
-  const isPremberURL = PREMBER_URLS.indexOf(new URL(url).pathname) !== -1;
+  // Check if the path we are visiting is in the prember routes with or without trailing slash
+  const withSlash = url.endsWith('/') ? url : `${url}/`;
+  const withoutSlash = url.endsWith('/') ? url.slice(0, -1) : url;
+  const isPremberURL =
+    PREMBER_URLS.indexOf(new URL(withSlash).pathname) !== -1 ||
+    PREMBER_URLS.indexOf(new URL(withoutSlash).pathname) !== -1;
 
   if (isGETRequest && isHTMLRequest && isLocal && isPremberURL) {
     event.respondWith(
       caches.match(url, { cacheName: CACHE_NAME }).then((cached) => {
         return cached || fetch(event.request)
-        .then((response) => {
-          const cacheCopy = response.clone();
+          .then((response) => {
+            if (!response.redirected) {
+              const cacheCopy = response.clone();
 
-          caches.open(CACHE_NAME)
-            .then(function add(cache) {
-              cache.put(url, cacheCopy);
-            });
+              caches.open(CACHE_NAME)
+                .then(function add(cache) {
+                  cache.put(url, cacheCopy);
+                });
+            }
 
-          return response;
-        });
+            return response;
+          });
       })
     );
   }
