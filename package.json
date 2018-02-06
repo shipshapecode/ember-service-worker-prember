@@ -4,7 +4,9 @@
   "description": "An Ember Service Worker plugin that caches the index.html files for each prember route",
   "keywords": [
     "ember-addon",
-    "ember-service-worker-plugin"
+    "ember-service-worker-plugin",
+    "prember",
+    "prerender"
   ],
   "license": "MIT",
   "author": "Robert Wagner",
