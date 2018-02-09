@@ -35,7 +35,9 @@ module.exports = function(defaults) {
       // Which urls to cache. This defaults to what you defined in your prember.urls config
       urls: ['/', '/foo', '/bar'],
 
-      // changing this version number will bust the cache
+      // Changing this version number will bust the cache, but you probably do not
+      // want to be doing this manually, but rather using `versionStrategy` as
+      // explained here http://ember-service-worker.com/documentation/configuration/#versioning
       version: '1'
     }
   });
