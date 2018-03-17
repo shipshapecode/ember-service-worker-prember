@@ -15,11 +15,14 @@ module.exports = {
 
   treeForServiceWorker(swTree, appTree) {
     const premberOptions = this.app.options['prember'];
-    const premberUrls = premberOptions && premberOptions.urls ? premberOptions.urls : [];
-    // We default to the urls you pass to prember, but you can override
-    const eswPremberOptions = Object.assign({ urls: premberUrls }, this.app.options['esw-prember']);
-    const configFile = new Config([appTree], eswPremberOptions);
+    // Make sure we only do this stuff if prember is enabled
+    if (premberOptions && (premberOptions.enabled || (this.app.env === 'production' || process.env.PREMBER))) {
+      const premberUrls = premberOptions && premberOptions.urls ? premberOptions.urls : [];
+      // We default to the urls you pass to prember, but you can override
+      const eswPremberOptions = Object.assign({ urls: premberUrls }, this.app.options['esw-prember']);
+      const configFile = new Config([appTree], eswPremberOptions);
 
-    return mergeTrees([swTree, configFile]);
+      return mergeTrees([swTree, configFile]);
+    }
   }
 };
