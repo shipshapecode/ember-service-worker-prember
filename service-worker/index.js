@@ -1,14 +1,48 @@
 import {
   ENVIRONMENT,
-  PREMBER_URLS,
-  VERSION
+  HTML_MAPPING
 } from 'ember-service-worker-prember/service-worker/config';
 
-import { urlMatchesAnyPattern } from 'ember-service-worker/service-worker/url-utils';
-import cleanupCaches from 'ember-service-worker/service-worker/cleanup-caches';
+/**
+ * Fetch the html and cache it
+ * @param {request} request
+ * @param {string} cacheName The string that represents the hashed html content
+ * @returns {Promise<Response>}
+ */
+function fetchAndCache(request, cacheName) {
+  return fetch(request)
+    .then((response) => {
+      if (cacheName && !response.redirected) {
+        return caches.open(cacheName)
+          .then((cache) => {
+            return cache.put(request, response.clone());
+          })
+          .then(() => {
+            return response;
+          });
+      }
 
-const CACHE_KEY_PREFIX = 'esw-prember';
-const CACHE_NAME = `${CACHE_KEY_PREFIX}-${VERSION}`;
+      return response;
+    });
+}
+
+/**
+ * Retrieve the html from the cache or call fetchAndCache to get the html and cache it
+ * @param {request} request
+ * @returns {Promise<Response>}
+ */
+function getHtmlFile(request) {
+  let url = new URL(request.url).pathname;
+  url = url.endsWith('/') ? url : `${url}/`;
+  const cacheName = HTML_MAPPING[url];
+  return caches.open(cacheName)
+    .then((cache) => {
+      return cache.match(url);
+    })
+    .then((response) => {
+      return response ? response : fetchAndCache(request, cacheName);
+    });
+}
 
 /**
  * Check if this is a GET request, the type is HTML, and it is on our local origin.
@@ -25,22 +59,28 @@ function isLocalHTMLGETRequest(request, url) {
 }
 
 /**
- * Check if the path we are visiting is in the prember routes with or without trailing slash
- * @param {string} url The url to check
- * @returns {boolean} Whether this is a prember url or not
+ * Make sure we are not in development mode and went to '/tests'
+ * @param {string} url The request.url string
+ * @returns {boolean} True if env is development and we went to '/tests'
  */
-function isPremberURL(url) {
-  const withSlash = url.endsWith('/') ? url : `${url}/`;
-  const withoutSlash = url.endsWith('/') ? url.slice(0, -1) : url;
-  return PREMBER_URLS.indexOf(new URL(withSlash).pathname) !== -1 ||
-    PREMBER_URLS.indexOf(new URL(withoutSlash).pathname) !== -1;
+function isTests(url) {
+  return new URL(url).pathname === '/tests' && ENVIRONMENT === 'development';
 }
+
 
 /**
  * Cleanup old cached content
  */
-self.addEventListener('activate', (event) => {
-  event.waitUntil(cleanupCaches(CACHE_KEY_PREFIX, CACHE_NAME));
+self.addEventListener('activate', event => {
+  const EXPECTED_CACHES = Object.values(HTML_MAPPING);
+  event.waitUntil(caches.keys().then(cacheNames => {
+    const outdatedCaches = cacheNames
+      .filter((cacheName) => {
+        return cacheName.startsWith('esw-prember') && !EXPECTED_CACHES.includes(cacheName);
+      });
+    return Promise.all(outdatedCaches.map(cacheName => caches.delete(cacheName)));
+
+  }).then(() => self.clients.claim()));
 });
 
 /**
@@ -49,25 +89,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   let request = event.request;
   let url = request.url;
-  let isTests = url.pathname === '/tests' && ENVIRONMENT === 'development';
 
-  if (isLocalHTMLGETRequest(request, url) && isPremberURL(url)) {
+  if (isLocalHTMLGETRequest(request, url) && !isTests(url)) {
     event.respondWith(
-      caches.match(url, { cacheName: CACHE_NAME }).then((cached) => {
-        return cached || fetch(event.request)
-          .then((response) => {
-            if (!response.redirected) {
-              const cacheCopy = response.clone();
-
-              caches.open(CACHE_NAME)
-                .then(function add(cache) {
-                  cache.put(url, cacheCopy);
-                });
-            }
-
-            return response;
-          });
-      })
+      getHtmlFile(request)
+      // TODO implement fallback here
+      // .catch(() => getFallbackPage(request))
     );
   }
 });

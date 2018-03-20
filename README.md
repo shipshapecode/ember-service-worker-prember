@@ -22,9 +22,10 @@ ember install ember-service-worker-prember
 
 ## Configuration
 
-Configuration is optional. If you do not pass anything in, the urls you
-already defined for `prember.urls` will be used by default.
-Configuration is done in the `ember-cli-build.js` file:
+Configuration is optional. You should not need to manually bust the cache.
+This addon now finds all `index.html` files and makes a hash of the contents.
+It will constantly check if this hash gets out of date, and switch the files for you.
+If things seem to be broken, you can try manually bumping the version.
 
 ```js
 var EmberApp = require('ember-cli/lib/broccoli/ember-app');
@@ -32,9 +33,6 @@ var EmberApp = require('ember-cli/lib/broccoli/ember-app');
 module.exports = function(defaults) {
   var app = new EmberApp(defaults, {
     'esw-prember': {
-      // Which urls to cache. This defaults to what you defined in your prember.urls config
-      urls: ['/', '/foo', '/bar'],
-
       // Changing this version number will bust the cache, but you probably do not
       // want to be doing this manually, but rather using `versionStrategy` as
       // explained here http://ember-service-worker.com/documentation/configuration/#versioning
