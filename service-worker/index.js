@@ -1,4 +1,5 @@
 import {
+  ENVIRONMENT,
   PREMBER_URLS,
   VERSION
 } from 'ember-service-worker-prember/service-worker/config';
@@ -48,6 +49,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   let request = event.request;
   let url = request.url;
+  let isTests = url.pathname === '/tests' && ENVIRONMENT === 'development';
 
   if (isLocalHTMLGETRequest(request, url) && isPremberURL(url)) {
     event.respondWith(
