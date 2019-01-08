@@ -18,7 +18,7 @@ module.exports = {
     // Make sure we only do this stuff if prember is enabled
     if (premberOptions && (premberOptions.enabled || (this.app.env === 'production' || process.env.PREMBER))) {
       const eswPremberOptions = this.app.options['esw-prember'];
-      const configFile = new Config([appTree], eswPremberOptions);
+      const configFile = new Config(appTree, {env: this.app.env, ...eswPremberOptions});
 
       return mergeTrees([swTree, configFile]);
     }
